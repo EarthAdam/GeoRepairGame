@@ -21,6 +21,12 @@ public class World : MonoBehaviour
 
 public class Scenario : MonoBehaviour {
 
+    public Material grass;
+    public Material trees;
+    public Material water;
+    public Material fire;
+    public Material dead;
+
     public Hexsphere world;
 
     public int maximumIncidents;
@@ -35,9 +41,17 @@ public class Scenario : MonoBehaviour {
 
     public readonly List<Biome> biomes = new List<Biome>();
 
+    public readonly List<ActiveIncident> activeIncidents = new List<ActiveIncident>();
+
     public Player player;
 
     void Start() {
+
+        grass = (Material)Resources.Load("Group2", typeof(Material));
+        trees = (Material)Resources.Load("Group1", typeof(Material));;
+        water = (Material)Resources.Load("Group0", typeof(Material));;
+        fire = (Material)Resources.Load("Group3", typeof(Material));;
+        dead = (Material)Resources.Load("Group4", typeof(Material));;
 
         // determine the size of the world
 
@@ -93,8 +107,8 @@ public class Scenario : MonoBehaviour {
 
         // increment damage caused by active incidents
 
-        foreach (var biome in biomes) {
-            biome.Update(currentTime);
+        foreach (var activeIncident in activeIncidents) {
+            activeIncident.Update(currentTime);
         }
 
         // calculate whether or not an incident begins
@@ -119,26 +133,27 @@ public abstract class Biome {
 
     public ActiveIncident activeIncident;
 
-    public void Update(float currentTime) {
+    public void Update(int damage) {
 
-        // if there is active incident
-        //      call update on the active incident passing the current time
-
-    }
-
-    public void Apply(Tile tile) {
-
-        // update the material of the tile to represent the current state
+        // update the current damage to the damage indicated (from the active incident)
 
     }
+
+    public abstract void Apply(Tile tile);
 
 }
 
 public sealed class Sea : Biome {
 
+    private readonly Material water;
+
     public static string MyName = "Sea";
 
     public override string Name => MyName;
+
+    public Sea(Material water) {
+        this.water = water;        
+    }
 
     public override Dictionary<string, int> ResourcesProvided => new Dictionary<string, int> {
         { Water.MyName, 2 }
@@ -147,13 +162,29 @@ public sealed class Sea : Biome {
     public override Dictionary<string, int> ResourcesNeeded => new Dictionary<string, int> {
     };
 
+    public override void Apply(Tile tile) {
+
+        tile.SetMaterial(water);
+
+    }
+
 }
 
 public sealed class Forest : Biome {
 
+    private readonly Material trees;
+    private readonly Material fire;
+    private readonly Material dead;
+
     public static string MyName = "Forest";
 
     public override string Name => MyName;
+
+    public Forest(Material trees, Material fire, Material dead) {
+        this.trees = trees;
+        this.fire = fire;
+        this.dead = dead;
+    }
 
     public override Dictionary<string, int> ResourcesProvided => new Dictionary<string, int> {
         { Seed.MyName, 3 }
@@ -164,13 +195,31 @@ public sealed class Forest : Biome {
         { Water.MyName, 3 }
     };
 
+    public override void Apply(Tile tile) {
+
+        tile.SetMaterial(trees);
+        tile.SetMaterial(fire);
+        tile.SetMaterial(dead);
+
+    }
+
 }
 
 public sealed class Plain : Biome {
 
+    private readonly Material grass;
+    private readonly Material fire;
+    private readonly Material dead;
+
     public static string MyName = "Plain";
 
     public override string Name => MyName;
+
+    public Plain(Material grass, Material fire, Material dead) {
+        this.grass = grass;
+        this.fire = fire;
+        this.dead = dead;
+    }
 
     public override Dictionary<string, int> ResourcesProvided => new Dictionary<string, int> {
         { Seed.MyName, 5 }
@@ -180,6 +229,14 @@ public sealed class Plain : Biome {
         { Seed.MyName, 5 },
         { Water.MyName, 3 }
     };
+
+    public override void Apply(Tile tile) {
+
+        tile.SetMaterial(grass);
+        tile.SetMaterial(fire);
+        tile.SetMaterial(dead);
+
+    }
 
 }
 
@@ -262,6 +319,10 @@ public sealed class ActiveIncident {
     public Incident incident;
 
     public int intensity;
+
+    public void Update(float currentTime) {
+        
+    }
 
 }
 
