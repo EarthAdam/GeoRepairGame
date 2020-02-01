@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Linq;
 
 public class World : MonoBehaviour
 {
@@ -26,11 +27,15 @@ public class Scenario : MonoBehaviour {
 
     public Func<float, float, float, float> easing;
 
-    public Dictionary<Vehicle, int> availableVehicles;
+    public readonly Dictionary<Vehicle, int> availableVehicles = new Dictionary<Vehicle, int>();
 
-    public Dictionary<Biome, int> availableBiomes;
+    public readonly Dictionary<Biome, int> availableBiomes = new Dictionary<Biome, int>();
 
-    public Dictionary<Incident, int> potentialIncidents;
+    public readonly Dictionary<Incident, int> potentialIncidents = new Dictionary<Incident, int>();
+
+    public readonly List<Biome> biomes = new List<Biome>();
+
+    public Player player;
 
     void Start() {
 
@@ -58,10 +63,15 @@ public class Scenario : MonoBehaviour {
         //              purchase (if available funds match or exceed cost)
 
         // update world (materials for biomes that changed state)
+        foreach (var tuple in biomes.Zip(world.tiles, (biome, tile) => (biome, tile))) {
+            tuple.biome.Apply(tuple.tile);
+        }
 
     }
 
     void FixedUpdate() {
+
+        var currentTime = Time.time;
 
         // update state of action buttons based on selected objects
 
@@ -73,12 +83,19 @@ public class Scenario : MonoBehaviour {
         //          otherwise, diable purchase button
 
         // update position of movable objects
+        foreach (var vehicle in player.Vehicles) {
+            vehicle.Update(currentTime);
+        }
 
         // trigger vehicle action
 
         //      if vehicle location equals destination location, execute action
 
         // increment damage caused by active incidents
+
+        foreach (var biome in biomes) {
+            biome.Update(currentTime);
+        }
 
         // calculate whether or not an incident begins
         
@@ -88,9 +105,11 @@ public class Scenario : MonoBehaviour {
 
 public abstract class Biome {
 
-    public int strength;
+    protected Tile tile;
 
-    public int damage;
+    protected int strength;
+
+    protected int damage;
 
     public abstract string Name { get; }
 
@@ -99,6 +118,19 @@ public abstract class Biome {
     public abstract Dictionary<string, int> ResourcesNeeded { get; }
 
     public ActiveIncident activeIncident;
+
+    public void Update(float currentTime) {
+
+        // if there is active incident
+        //      call update on the active incident passing the current time
+
+    }
+
+    public void Apply(Tile tile) {
+
+        // update the material of the tile to represent the current state
+
+    }
 
 }
 
@@ -153,7 +185,34 @@ public sealed class Plain : Biome {
 
 public abstract class Vehicle {
 
+    protected Vector3 currentLocation;
+
+    protected Vector3 beginLocation;
+
+    protected Vector3 endLocation;
+
+    protected float beginTime;
+
     public abstract int Capacity { get; }
+
+    public void Service(Biome biome) {
+
+        // update begin and end
+
+    }
+
+    public void Update(float currentTime) {
+
+        // if the current location does not equal the end location
+        //      do the lerp
+
+    }
+
+    public void Apply(GameObject vehicle) {
+
+        // update the current location to the vehicle
+
+    }
 
 }
 
@@ -235,6 +294,10 @@ public sealed class Water : Resource {
 }
 
 public sealed class Player {
+
+    private readonly List<Vehicle> vehicles = new List<Vehicle>();
+
+    public List<Vehicle> Vehicles => vehicles;
 
     public Vehicle selectedVehicle;
     
