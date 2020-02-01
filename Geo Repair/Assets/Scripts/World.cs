@@ -64,7 +64,8 @@ public class Scenario : ScriptableObject {
         fire = (Material)Resources.Load("Materials/Fire", typeof(Material));
         dead = (Material)Resources.Load("Materials/Dead", typeof(Material));
 
-        // determine the size of the world
+        // TODO: This should be based on the intensity of the scenario.
+        // randomly place x number of each biome listed in availableBiomes
         for (var index = 0; index < world.TileCount; ++index) {
             Biome biome;
             if ((index % 3) == 0) {
@@ -77,9 +78,6 @@ public class Scenario : ScriptableObject {
             biomes.Add(biome);
         }
 
-        // randomly place x number of each biome listed in availableBiomes
-
-        // update world (materials for each tile)
         foreach (var biome in biomes) {
             biome.Apply();
         }
@@ -101,12 +99,15 @@ public class Scenario : ScriptableObject {
         //              select vehicle
         //              purchase (if available funds match or exceed cost)
 
-        // update world (materials for biomes that changed state)
         foreach (var biome in biomes) {
-            biome.Apply();
+            if (biome.Changed) {
+                biome.Apply();
+            }
         }
 
     }
+
+    private int last = 0;
 
     public void FixedUpdate() {
 
@@ -130,24 +131,27 @@ public class Scenario : ScriptableObject {
 
         //      if vehicle location equals destination location, execute action
 
-        // increment damage caused by active incidents
-
         foreach (var activeIncident in activeIncidents) {
             activeIncident.Update(currentTime);
         }
 
-        // calculate whether or not an incident begins
+        // TODO: calculate whether or not an incident begins
 
-        if (currentTime < biomes.Count) { // % 50) < 2) {
+        if (currentTime < biomes.Count) {
 
             var biomeIndex = (int)(currentTime % biomes.Count);
             var incidentIndex = (int)(currentTime % potentialIncidents.Keys.Count);
-            Debug.Log($"Creating active incident {biomeIndex} :: {incidentIndex}.");
 
-            var biome = biomes[biomeIndex];
-            var incident = potentialIncidents.Keys.ElementAt(incidentIndex);
-            var activeIncident = new ActiveIncident(biome, incident);
-            activeIncidents.Add(activeIncident);
+            if (biomeIndex > last) {
+                Debug.Log($"Creating active incident {biomeIndex} :: {incidentIndex}.");
+
+                var biome = biomes[biomeIndex];
+                var incident = potentialIncidents.Keys.ElementAt(incidentIndex);
+                var activeIncident = new ActiveIncident(biome, incident);
+                activeIncidents.Add(activeIncident);
+
+                last = biomeIndex;
+            }
         }
         
     }
@@ -156,13 +160,19 @@ public class Scenario : ScriptableObject {
 
 public abstract class Biome {
 
+    private int damage;
+
+    private bool changed;
+
     protected Tile tile;
 
     protected int strength;
 
-    protected int damage;
-
     public abstract string Name { get; }
+
+    public bool Changed => changed;
+
+    protected int Damage => damage;
 
     public Biome(Tile tile)
     {
@@ -177,16 +187,11 @@ public abstract class Biome {
 
     public void Update(int damage) {
 
-        // update the current damage to the damage indicated (from the active incident)
-        this.damage = damage;
+        if (this.damage != damage) {
+            this.damage = damage;
+            changed = true;
+        }
 
-        // Debug.Log($"Damage set to {damage}.");
-
-    }
-
-    // Temporary
-    public int GetDamage() {
-        return this.damage;
     }
 
     public abstract void Apply();
@@ -249,6 +254,8 @@ public sealed class Forest : Biome {
 
     public override void Apply() {
 
+        var damage = Damage;
+
         if (damage < 1) {
             tile.SetMaterial(forest);
         } else if (damage < 100) {
@@ -288,6 +295,8 @@ public sealed class Plain : Biome {
     };
 
     public override void Apply() {
+
+        var damage = Damage;
 
         if (damage < 1) {
             tile.SetMaterial(grass);
@@ -387,8 +396,9 @@ public sealed class ActiveIncident {
         this.incident = incident;
     }
 
+    // TODO: Fix this (should cause damage based on some time scale?)
     public void Update(float currentTime) {
-        this.biome.Update((int)(currentTime * 2));
+        this.biome.Update((int)(currentTime));
     }
 
 }
