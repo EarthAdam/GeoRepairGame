@@ -76,6 +76,32 @@ public class LaserPointer : OVRCursor
         _forward = t.forward;
         _hitTarget = false;
     }
+    GameObject lastTile;
+    private void Update()
+    {
+        Ray ray = new Ray(_startPoint, ((_startPoint + maxLength * _forward) - _startPoint));
+        //print("Start:" + _startPoint);
+        //print("End:" + _startPoint + maxLength * _forward);
+        RaycastHit raycastHitInfo;
+        if (Physics.Raycast(ray, out raycastHitInfo))
+        {
+            GameObject objectHitByRaycast = raycastHitInfo.collider.gameObject;
+            print(objectHitByRaycast.name);
+
+            
+            if (objectHitByRaycast.name == "Tile")
+            {
+                objectHitByRaycast.GetComponent<Tile>().Collided();
+                lastTile = objectHitByRaycast;
+            }
+            else
+                if (lastTile != null)
+            {
+                lastTile.GetComponent<Tile>().Uncollided();
+            }
+            
+        }
+    }
 
     private void LateUpdate()
     {

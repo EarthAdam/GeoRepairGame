@@ -106,8 +106,16 @@ public class Tile : MonoBehaviour {
 		id = ID;
 		ID++;
 	}
-
-	void OnMouseEnter()
+    public void Collided()
+    {
+        Pointer.instance.setPointer(PointerStatus.TILE, FaceCenter, transform.up);
+    }
+    public void Uncollided()
+    {
+        Pointer.instance.unsetPointer();
+    }
+    /*
+    void OnMouseEnter()
     {
 		Pointer.instance.setPointer (PointerStatus.TILE, FaceCenter, transform.up);
 	}
@@ -115,8 +123,9 @@ public class Tile : MonoBehaviour {
     {
 		Pointer.instance.unsetPointer ();
 	}
-	
-	void OnMouseDown()
+    */
+
+    void OnMouseDown()
     {
 		//Demo function
 		//pathfindingDrawDemo ();
