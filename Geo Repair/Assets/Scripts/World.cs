@@ -6,23 +6,30 @@ using System.Linq;
 
 public class World : MonoBehaviour
 {
+    public Scenario scenario;
+    
     // Start is called before the first frame update
     void Start()
     {
-        
+        scenario = ScriptableObject.CreateInstance<Scenario>();
+        scenario.Start();
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        scenario.Update();
+    }
+
+    void FixedUpdate() {
+        scenario.FixedUpdate();
     }
 }
 
-public class Scenario : MonoBehaviour {
+public class Scenario : ScriptableObject {
 
     public Material grass;
-    public Material trees;
+    public Material forest;
     public Material water;
     public Material fire;
     public Material dead;
@@ -37,31 +44,49 @@ public class Scenario : MonoBehaviour {
 
     public readonly Dictionary<Biome, int> availableBiomes = new Dictionary<Biome, int>();
 
-    public readonly Dictionary<Incident, int> potentialIncidents = new Dictionary<Incident, int>();
+    public readonly Dictionary<Incident, int> potentialIncidents = new Dictionary<Incident, int> {
+        { new ForestFire(), 1 }
+    };
 
     public readonly List<Biome> biomes = new List<Biome>();
 
     public readonly List<ActiveIncident> activeIncidents = new List<ActiveIncident>();
 
-    public Player player;
+    public Player player = new Player();
 
-    void Start() {
+    public void Start() {
 
-        grass = (Material)Resources.Load("Group2", typeof(Material));
-        trees = (Material)Resources.Load("Group1", typeof(Material));;
-        water = (Material)Resources.Load("Group0", typeof(Material));;
-        fire = (Material)Resources.Load("Group3", typeof(Material));;
-        dead = (Material)Resources.Load("Group4", typeof(Material));;
+        world = (Hexsphere)GameObject.Find("Hexsphere").GetComponent<Hexsphere>();
+
+        grass = (Material)Resources.Load("Materials/Grass", typeof(Material));
+        forest = (Material)Resources.Load("Materials/Forest", typeof(Material));
+        water = (Material)Resources.Load("Materials/Water", typeof(Material));
+        fire = (Material)Resources.Load("Materials/Fire", typeof(Material));
+        dead = (Material)Resources.Load("Materials/Dead", typeof(Material));
 
         // determine the size of the world
+        for (var index = 0; index < world.TileCount; ++index) {
+            Biome biome;
+            if ((index % 3) == 0) {
+                biome = new Sea(world.tiles[index], water);
+            } else if ((index % 3) == 1) {
+                biome = new Forest(world.tiles[index], forest, fire, dead);
+            } else {
+                biome = new Plain(world.tiles[index], grass, fire, dead);
+            }
+            biomes.Add(biome);
+        }
 
         // randomly place x number of each biome listed in availableBiomes
 
         // update world (materials for each tile)
+        foreach (var biome in biomes) {
+            biome.Apply();
+        }
 
     }
 
-    void Update() {
+    public void Update() {
 
         // handle keyboard / vr input
 
@@ -77,13 +102,13 @@ public class Scenario : MonoBehaviour {
         //              purchase (if available funds match or exceed cost)
 
         // update world (materials for biomes that changed state)
-        foreach (var tuple in biomes.Zip(world.tiles, (biome, tile) => (biome, tile))) {
-            tuple.biome.Apply(tuple.tile);
+        foreach (var biome in biomes) {
+            biome.Apply();
         }
 
     }
 
-    void FixedUpdate() {
+    public void FixedUpdate() {
 
         var currentTime = Time.time;
 
@@ -112,6 +137,18 @@ public class Scenario : MonoBehaviour {
         }
 
         // calculate whether or not an incident begins
+
+        if (currentTime < biomes.Count) { // % 50) < 2) {
+
+            var biomeIndex = (int)(currentTime % biomes.Count);
+            var incidentIndex = (int)(currentTime % potentialIncidents.Keys.Count);
+            Debug.Log($"Creating active incident {biomeIndex} :: {incidentIndex}.");
+
+            var biome = biomes[biomeIndex];
+            var incident = potentialIncidents.Keys.ElementAt(incidentIndex);
+            var activeIncident = new ActiveIncident(biome, incident);
+            activeIncidents.Add(activeIncident);
+        }
         
     }
 
@@ -127,6 +164,11 @@ public abstract class Biome {
 
     public abstract string Name { get; }
 
+    public Biome(Tile tile)
+    {
+        this.tile = tile;
+    }
+
     public abstract Dictionary<string, int> ResourcesProvided { get; }
 
     public abstract Dictionary<string, int> ResourcesNeeded { get; }
@@ -136,10 +178,18 @@ public abstract class Biome {
     public void Update(int damage) {
 
         // update the current damage to the damage indicated (from the active incident)
+        this.damage = damage;
+
+        // Debug.Log($"Damage set to {damage}.");
 
     }
 
-    public abstract void Apply(Tile tile);
+    // Temporary
+    public int GetDamage() {
+        return this.damage;
+    }
+
+    public abstract void Apply();
 
 }
 
@@ -151,7 +201,8 @@ public sealed class Sea : Biome {
 
     public override string Name => MyName;
 
-    public Sea(Material water) {
+    public Sea(Tile tile, Material water)
+        : base(tile) {
         this.water = water;        
     }
 
@@ -162,7 +213,7 @@ public sealed class Sea : Biome {
     public override Dictionary<string, int> ResourcesNeeded => new Dictionary<string, int> {
     };
 
-    public override void Apply(Tile tile) {
+    public override void Apply() {
 
         tile.SetMaterial(water);
 
@@ -172,7 +223,7 @@ public sealed class Sea : Biome {
 
 public sealed class Forest : Biome {
 
-    private readonly Material trees;
+    private readonly Material forest;
     private readonly Material fire;
     private readonly Material dead;
 
@@ -180,8 +231,9 @@ public sealed class Forest : Biome {
 
     public override string Name => MyName;
 
-    public Forest(Material trees, Material fire, Material dead) {
-        this.trees = trees;
+    public Forest(Tile tile, Material forest, Material fire, Material dead)
+        : base(tile) {
+        this.forest = forest;
         this.fire = fire;
         this.dead = dead;
     }
@@ -195,11 +247,15 @@ public sealed class Forest : Biome {
         { Water.MyName, 3 }
     };
 
-    public override void Apply(Tile tile) {
+    public override void Apply() {
 
-        tile.SetMaterial(trees);
-        tile.SetMaterial(fire);
-        tile.SetMaterial(dead);
+        if (damage < 1) {
+            tile.SetMaterial(forest);
+        } else if (damage < 100) {
+            tile.SetMaterial(fire);
+        } else {
+            tile.SetMaterial(dead);
+        }
 
     }
 
@@ -215,7 +271,8 @@ public sealed class Plain : Biome {
 
     public override string Name => MyName;
 
-    public Plain(Material grass, Material fire, Material dead) {
+    public Plain(Tile tile, Material grass, Material fire, Material dead)
+        : base(tile) {
         this.grass = grass;
         this.fire = fire;
         this.dead = dead;
@@ -230,11 +287,15 @@ public sealed class Plain : Biome {
         { Water.MyName, 3 }
     };
 
-    public override void Apply(Tile tile) {
+    public override void Apply() {
 
-        tile.SetMaterial(grass);
-        tile.SetMaterial(fire);
-        tile.SetMaterial(dead);
+        if (damage < 1) {
+            tile.SetMaterial(grass);
+        } else if (damage < 100) {
+            tile.SetMaterial(fire);
+        } else {
+            tile.SetMaterial(dead);
+        }
 
     }
 
@@ -320,8 +381,14 @@ public sealed class ActiveIncident {
 
     public int intensity;
 
+    public ActiveIncident(Biome biome, Incident incident)
+    {
+        this.biome = biome;
+        this.incident = incident;
+    }
+
     public void Update(float currentTime) {
-        
+        this.biome.Update((int)(currentTime * 2));
     }
 
 }
