@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 0
+    path: Assets/Oculus/VR/Scenes/UI.unity
+    guid: 1f4d3ae64a10d434db219de8b14348e1
+  - enabled: 1
+    path: Assets/Scenes/Holodeck.unity
+    guid: 62fa228c63cc3344b8c09f1247342123
+  m_configObjects:
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 34610dcd0070b6b4fa4401893e62b065,
+      type: 2}
