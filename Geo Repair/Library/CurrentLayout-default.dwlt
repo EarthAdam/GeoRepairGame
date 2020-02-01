@@ -112,10 +112,10 @@ MonoBehaviour:
     y: 30
     width: 1904
     height: 931
-  m_MinSize: {x: 679, y: 492}
+  m_MinSize: {x: 879, y: 492}
   m_MaxSize: {x: 14002, y: 14042}
   vertical: 0
-  controlID: 218
+  controlID: 22
 --- !u!114 &6
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -137,10 +137,10 @@ MonoBehaviour:
     y: 0
     width: 1366
     height: 931
-  m_MinSize: {x: 403, y: 492}
+  m_MinSize: {x: 603, y: 492}
   m_MaxSize: {x: 10001, y: 14042}
   vertical: 1
-  controlID: 16
+  controlID: 23
 --- !u!114 &7
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -162,10 +162,10 @@ MonoBehaviour:
     y: 0
     width: 1366
     height: 659
-  m_MinSize: {x: 403, y: 221}
-  m_MaxSize: {x: 8003, y: 4021}
+  m_MinSize: {x: 603, y: 221}
+  m_MaxSize: {x: 6051, y: 4021}
   vertical: 0
-  controlID: 17
+  controlID: 24
 --- !u!114 &8
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -202,7 +202,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 1
   m_Script: {fileID: 12006, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: SceneView
+  m_Name: AssetStoreWindow
   m_EditorClassIdentifier: 
   m_Children: []
   m_Position:
@@ -211,15 +211,15 @@ MonoBehaviour:
     y: 0
     width: 1164
     height: 659
-  m_MinSize: {x: 202, y: 221}
-  m_MaxSize: {x: 4002, y: 4021}
-  m_ActualView: {fileID: 14}
+  m_MinSize: {x: 402, y: 121}
+  m_MaxSize: {x: 2050, y: 2069}
+  m_ActualView: {fileID: 15}
   m_Panes:
   - {fileID: 14}
   - {fileID: 12}
   - {fileID: 15}
-  m_Selected: 0
-  m_LastSelected: 1
+  m_Selected: 2
+  m_LastSelected: 0
 --- !u!114 &10
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -310,7 +310,7 @@ MonoBehaviour:
   m_TargetSize: {x: 1162, y: 617}
   m_TextureFilterMode: 0
   m_TextureHideFlags: 61
-  m_RenderIMGUI: 1
+  m_RenderIMGUI: 0
   m_MaximizeOnPlay: 0
   m_VSyncEnabled: 0
   m_Gizmos: 0
@@ -393,9 +393,9 @@ MonoBehaviour:
   m_SceneHierarchy:
     m_TreeViewState:
       scrollPos: {x: 0, y: 0}
-      m_SelectedIDs: 60000100
-      m_LastClickedID: 65632
-      m_ExpandedIDs: 08e9ffff10eaffff1ceaffff1eeaffffbaf2ffff96f3ffffeaf8ffffecf8ffff72fbffff004b0000706800008c680000546900000096000060000100
+      m_SelectedIDs: 247efeff
+      m_LastClickedID: -98780
+      m_ExpandedIDs: c07cfeff087dfeff127dfeff7c7dfeff207efeff8892feff6293feff04a8fefff4c9feff66e0feff28e2fefffee3feff72fbffff003d000044cd000026d1000062d10000fef000001a080100
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -455,9 +455,9 @@ MonoBehaviour:
   m_PlayAudio: 0
   m_AudioPlay: 0
   m_Position:
-    m_Target: {x: -0.5605364, y: -0.48070276, z: 1.7246752}
+    m_Target: {x: -1.05111, y: 0.101089925, z: -0.78360504}
     speed: 2
-    m_Value: {x: -0.5605364, y: -0.48070276, z: 1.7246752}
+    m_Value: {x: -1.05111, y: 0.101089925, z: -0.78360504}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -503,13 +503,13 @@ MonoBehaviour:
     m_GridAxis: 1
     m_gridOpacity: 0.5
   m_Rotation:
-    m_Target: {x: -0.18662015, y: 0.030054703, z: -0.005711874, w: -0.9819561}
+    m_Target: {x: 0.19944875, y: 0.5444006, z: -0.13513584, w: 0.8034918}
     speed: 2
-    m_Value: {x: -0.18662009, y: 0.030054692, z: -0.005711872, w: -0.98195577}
+    m_Value: {x: 0.20105946, y: 0.5417819, z: -0.1353489, w: 0.8048156}
   m_Size:
-    m_Target: 4.5915155
+    m_Target: 1.0585259
     speed: 2
-    m_Value: 4.5915155
+    m_Value: 0.7585259
   m_Ortho:
     m_Target: 0
     speed: 2
@@ -599,20 +599,20 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets/HexPlanet/Scripts
+    - Assets/HexPlanet/Materials
   m_ViewMode: 1
   m_StartGridSize: 96
   m_LastFolders:
-  - Assets/HexPlanet/Scripts
+  - Assets/HexPlanet/Materials
   m_LastFoldersGridSize: 96
   m_LastProjectPath: A:\github\geo-repair\Geo Repair
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
-    scrollPos: {x: 0, y: 101}
-    m_SelectedIDs: c23a0000
-    m_LastClickedID: 15042
-    m_ExpandedIDs: 000000009a3a0000b83a0000ca3a0000743e000000ca9a3b
+    scrollPos: {x: 0, y: 57}
+    m_SelectedIDs: d6440000
+    m_LastClickedID: 17622
+    m_ExpandedIDs: 00000000a0440000a2440000a644000052a6000076a600008aa6000000ca9a3b
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -640,7 +640,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 000000009a3a0000
+    m_ExpandedIDs: 00000000a0440000a2440000a4440000a6440000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -692,7 +692,7 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
     m_NewAssetIndexInList: -1
-    m_ScrollPosition: {x: 0, y: 0}
+    m_ScrollPosition: {x: 0, y: 67}
     m_GridSize: 96
   m_SkipHiddenPackages: 0
   m_DirectoriesAreaWidth: 310
