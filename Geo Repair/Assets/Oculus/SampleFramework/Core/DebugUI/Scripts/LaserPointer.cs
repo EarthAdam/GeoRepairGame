@@ -77,7 +77,7 @@ public class LaserPointer : OVRCursor
         _hitTarget = false;
     }
     GameObject lastTile;
-    GameObject lastShip;
+    GameObject lastShipz;
     private void Update()
     {
         Ray ray = new Ray(_startPoint, ((_startPoint + maxLength * _forward) - _startPoint));
@@ -95,13 +95,13 @@ public class LaserPointer : OVRCursor
                     objectHitByRaycast.GetComponent<Tile>().ColliderClicked();
                 }
             }
-            else if (objectHitByRaycast.name == "Ship")
+            else if (objectHitByRaycast.name == "Shipz")
             {
-                objectHitByRaycast.GetComponent<Ship>().Collided();
-                lastShip = objectHitByRaycast;
+                objectHitByRaycast.GetComponent<Shipz>().Collided();
+                lastShipz = objectHitByRaycast;
                 if (OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger))
                 {
-                    objectHitByRaycast.GetComponent<Ship>().ColliderClicked();
+                    objectHitByRaycast.GetComponent<Shipz>().ColliderClicked();
                 }
             }
             else
@@ -111,9 +111,9 @@ public class LaserPointer : OVRCursor
                 {
                     lastTile.GetComponent<Tile>().Uncollided();
                 }
-                if (lastShip != null)
+                if (lastShipz != null)
                 {
-                    lastShip.GetComponent<Ship>().Uncollided();
+                    lastShipz.GetComponent<Shipz>().Uncollided();
                 }
 
             }
