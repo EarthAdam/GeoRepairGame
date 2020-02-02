@@ -8,9 +8,11 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Oculus/VR/Scenes/UI.unity
     guid: 1f4d3ae64a10d434db219de8b14348e1
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Holodeck.unity
     guid: 62fa228c63cc3344b8c09f1247342123
   m_configObjects:
+    Unity.XR.WindowsMR.Settings: {fileID: 11400000, guid: 891bdb9771683eb40bc794999e670fc0,
+      type: 2}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 34610dcd0070b6b4fa4401893e62b065,
       type: 2}

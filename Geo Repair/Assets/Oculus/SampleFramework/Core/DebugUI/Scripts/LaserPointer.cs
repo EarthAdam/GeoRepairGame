@@ -3,7 +3,7 @@
 Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.  
 
 See SampleFramework license.txt for license terms.  Unless required by applicable law 
-or agreed to in writing, the sample code is provided “AS IS” WITHOUT WARRANTIES OR 
+or agreed to in writing, the sample code is provided ï¿½AS ISï¿½ WITHOUT WARRANTIES OR 
 CONDITIONS OF ANY KIND, either express or implied.  See the license for specific 
 language governing permissions and limitations under the license.
 
@@ -77,7 +77,7 @@ public class LaserPointer : OVRCursor
         _hitTarget = false;
     }
     GameObject lastTile;
-    GameObject lastShipz;
+    GameObject lastShip;
     private void Update()
     {
         Ray ray = new Ray(_startPoint, ((_startPoint + maxLength * _forward) - _startPoint));
@@ -95,13 +95,13 @@ public class LaserPointer : OVRCursor
                     objectHitByRaycast.GetComponent<Tile>().ColliderClicked();
                 }
             }
-            else if (objectHitByRaycast.name == "Shipz")
+            else if (objectHitByRaycast.name == "Ship")
             {
-                objectHitByRaycast.GetComponent<Shipz>().Collided();
-                lastShipz = objectHitByRaycast;
+                objectHitByRaycast.GetComponent<Ship>().Collided();
+                lastShip = objectHitByRaycast;
                 if (OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger))
                 {
-                    objectHitByRaycast.GetComponent<Shipz>().ColliderClicked();
+                    objectHitByRaycast.GetComponent<Ship>().ColliderClicked();
                 }
             }
             else
@@ -111,9 +111,9 @@ public class LaserPointer : OVRCursor
                 {
                     lastTile.GetComponent<Tile>().Uncollided();
                 }
-                if (lastShipz != null)
+                if (lastShip != null)
                 {
-                    lastShipz.GetComponent<Shipz>().Uncollided();
+                    lastShip.GetComponent<Ship>().Uncollided();
                 }
 
             }
