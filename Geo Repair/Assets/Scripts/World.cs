@@ -157,6 +157,25 @@ public class Scenario : ScriptableObject
         //              select vehicle
         //              purchase (if available funds match or exceed cost)
 
+        if (Input.GetKeyDown(KeyCode.LeftControl) == true) {
+            // Debug.Log("Left Control Down");
+            var selected = null as Tile;
+            foreach (var tile in world.tiles) {
+                if (tile.Selected) {
+                    selected = tile;
+                }
+            }
+            if (selected == null) {
+                selected = world.tiles[0];
+            }
+            selected.ToggleSelected();
+        }
+
+        if (Input.GetKeyDown(KeyCode.RightControl) == true) {
+            // Debug.Log("Right Control Down");
+            ship.ToggleSelected();
+        }
+
         foreach (var biome in biomes)
         {
             if (biome.Changed)
@@ -185,15 +204,41 @@ public class Scenario : ScriptableObject
         //          if both a dock and an available vehicle is selected and cost <= available funds, enable purchase button
         //          otherwise, diable purchase button
 
-        // update position of movable objects
-        foreach (var vehicle in player.Vehicles)
-        {
+        foreach (var vehicle in player.Vehicles) {
             vehicle.Update(currentTime);
+            if (vehicle.Enroute) {
+                if (vehicle.AtDestination && !vehicle.AtHome) {
+                    if (vehicle.HasCargo) {
+                        vehicle.Unload();
+                    } else {
+                        vehicle.Load();
+                    }
+                } else if (vehicle.AtHome) {
+                    vehicle.Wait();
+                } else {
+                    // carry on
+                }
+            } else if (vehicle.Waiting) {
+                if (vehicle.AtDestination && !vehicle.AtHome) {
+                    // Debug.Log("At Destination");
+                    vehicle.ReturnHome();
+                } else if (vehicle.AtHome) {
+                    // Debug.Log("At Home");
+                    if (vehicle.Selected) {
+                        // Debug.Log("Vehicle Selected");
+                        foreach (var biome in biomes) {
+                            if (biome.Selected) {
+                                Debug.Log("Vehicle and Biome selected.  Activating.");
+                                vehicle.Service(biome);
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    vehicle.ReturnHome();
+                }
+            }
         }
-
-        // trigger vehicle action
-
-        //      if vehicle location equals destination location, execute action
 
         var exhausted = new List<ActiveIncident>();
         foreach (var activeIncident in activeIncidents)
@@ -235,7 +280,7 @@ public class Scenario : ScriptableObject
                     var biomeIndex = UnityEngine.Random.Range(0, healthy.Count - 1);
                     var incidentIndex = (int)(currentTime % potentialIncidents.Keys.Count);
 
-                    Debug.Log($"Creating active incident {biomeIndex} :: {incidentIndex}.");
+                    // Debug.Log($"Creating active incident {biomeIndex} :: {incidentIndex}.");
 
                     var biome = healthy[biomeIndex];
                     var incident = potentialIncidents.Keys.ElementAt(incidentIndex);
@@ -266,6 +311,12 @@ public abstract class Biome
 
     protected int Damage => damage;
 
+    public bool Selected => tile.Selected;
+
+    public void ToggleSelected() {
+        tile.ToggleSelected();
+    }
+
     public Biome(Tile tile)
     {
         this.tile = tile;
@@ -288,7 +339,7 @@ public abstract class Biome
             changed = true;
         }
 
-        Debug.Log($"Setting damage to {damage}");
+        // Debug.Log($"Setting damage to {damage}");
 
     }
 
@@ -468,7 +519,41 @@ public abstract class Vehicle
 
     protected OVRPlayerController home;
 
-    public abstract int Capacity { get; }
+    protected enum Status {
+        Waiting,
+        Enroute
+    }
+
+    protected Status status = Status.Waiting;
+
+    public bool Enroute => status == Status.Enroute;
+
+    public bool Waiting => status == Status.Waiting;
+
+    public bool AtHome => currentLocation == HomeLocation;
+
+    public bool AtDestination => endLocation != null && currentLocation == endLocation;
+
+    public bool Selected => ship.Selected;
+
+    public abstract Dictionary<Resource, int> Capacity { get; }
+
+    public bool HasCargo => cargo.Count > 0;
+
+    private readonly Dictionary<Resource, int> cargo = new Dictionary<Resource, int>();
+
+    public void Load() {
+        cargo.Add(new Seed(), 10);
+        cargo.Add(new Water(), 10);
+    }
+
+    public void Unload() {
+        cargo.Clear();
+    }
+
+    public void Wait() {
+        status = Status.Waiting;
+    }
 
     public Vehicle(Ship ship, OVRPlayerController home)
     {
@@ -481,10 +566,11 @@ public abstract class Vehicle
         }
     }
 
-    private void ReturnHome() {
+    public void ReturnHome() {
         beginTime = Time.time;
         beginLocation = currentLocation;
         endLocation = HomeLocation;
+        status = Status.Enroute;
     }
 
     public void Service(Biome biome)
@@ -492,6 +578,9 @@ public abstract class Vehicle
         beginTime = Time.time;
         beginLocation = currentLocation;
         endLocation = biome.Location;
+        status = Status.Enroute;
+        biome.ToggleSelected();
+        ship.ToggleSelected();
     }
 
     private Vector3 HomeLocation => new Vector3(
@@ -529,7 +618,12 @@ public sealed class SlowCargoShip : Vehicle
     {
     }
 
-    public override int Capacity => 500;
+    private readonly Dictionary<Resource, int> capacity = new Dictionary<Resource, int> {
+        { new Seed(), 10 },
+        { new Water(), 10 }
+    };
+
+    public override Dictionary<Resource, int> Capacity => capacity;
 
     protected override float Speed => 4f;
 }

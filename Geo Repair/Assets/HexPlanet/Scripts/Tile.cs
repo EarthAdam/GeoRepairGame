@@ -93,6 +93,14 @@ public class Tile : MonoBehaviour {
     [SerializeField, HideInInspector]
     private int[] Triangles;
 
+	public bool Selected => selected;
+
+	private bool selected = false;
+
+	public void ToggleSelected() {
+		selected = !selected;
+	}
+
     
     
 	void Awake()

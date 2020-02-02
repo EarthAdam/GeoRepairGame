@@ -10,6 +10,12 @@ public class Ship : MonoBehaviour
     public float maximum = 50.0F;
     public Vector3 destinationTile;
 
+    public bool Selected => shipSelected;
+
+    public void ToggleSelected() {
+        shipSelected = !shipSelected;
+    }
+
     // starting value for the Lerp
     static float t = 0.0f;
     // Start is called before the first frame update
