@@ -114,7 +114,7 @@ public class Tile : MonoBehaviour {
     {
         Pointer.instance.unsetPointer();
     }
-    /*
+
     void OnMouseEnter()
     {
 		Pointer.instance.setPointer (PointerStatus.TILE, FaceCenter, transform.up);
@@ -123,22 +123,12 @@ public class Tile : MonoBehaviour {
     {
 		Pointer.instance.unsetPointer ();
 	}
-    */
 
     public void ColliderClicked()
     {
-        GameObject.Find("Shipz").GetComponent<Shipz>().TileClicked();
-        GameObject.Find("Shipz").GetComponent<Shipz>().destinationTile = transform.position;
-        print("Clicked correctlyASsoo");
-        //Demo function
-        //pathfindingDrawDemo ();
-        /*
-        if (OnTileClickedAction != null)
-        {
-            OnTileClickedAction.Invoke(this);
-            print("Clicked correctly here too");
-        }
-        */
+		var ship = GameObject.Find("Ship").GetComponent<Ship>();
+        ship.TileClicked();
+        ship.destinationTile = transform.position;
 	}
 
 	/// <summary>

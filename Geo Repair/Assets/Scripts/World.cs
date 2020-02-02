@@ -20,27 +20,25 @@ public class World : MonoBehaviour
     {
         scenario.Update();
 
-        // Enable this for keyboard control:
-        // float horizontalValue = Input.GetAxis("Horizontal");
-        // float verticalValue = Input.GetAxis("Vertical");
+        float horizontalValue = Input.GetAxis("Horizontal");
+        float verticalValue = Input.GetAxis("Vertical");
         
-        // if (horizontalValue != 0)
-        // {
-        //     const float movementSpeed = 50f;
-        //     var world = GameObject.Find("Hexsphere").GetComponent<Hexsphere>();
-        //     world.transform.Rotate(0, horizontalValue * movementSpeed * Time.deltaTime, 0);
-        // }
+        if (horizontalValue != 0)
+        {
+            const float movementSpeed = 50f;
+            var world = GameObject.Find("Hexsphere").GetComponent<Hexsphere>();
+            world.transform.Rotate(0, horizontalValue * movementSpeed * Time.deltaTime, 0);
+        }
         
-        // if (verticalValue != 0)
-        // {
-        //     const float movementSpeed = 1f;
-        //     var player = GameObject.Find("OVRPlayerController").GetComponent<OVRPlayerController>();
-        //     var next = player.transform.position + new Vector3(0, 0, verticalValue * movementSpeed * Time.deltaTime);
-        //     if (next.z <= -2.5 && next.z >= -5) {
-        //         player.transform.position = next;
-        //     }
-        // }
-
+        if (verticalValue != 0)
+        {
+            const float movementSpeed = 1f;
+            var camera = GameObject.Find("Camera").GetComponent<OVRPlayerController>();
+            var next = camera.transform.position + new Vector3(0, 0, verticalValue * movementSpeed * Time.deltaTime);
+            if (next.z <= -2.5 && next.z >= -5) {
+                camera.transform.position = next;
+            }
+        }
     }
 
     void FixedUpdate()
@@ -58,7 +56,9 @@ public class Scenario : ScriptableObject
     public Material fire;
     public Material dead;
 
-    public Hexsphere world;
+    private Hexsphere world;
+
+    private Ship ship;
 
     public int maximumIncidents;
 
@@ -78,8 +78,14 @@ public class Scenario : ScriptableObject
 
     public Player player = new Player();
 
+    private OVRPlayerController camera;
+
+    private Vehicle vehicle;
+
     public void Start()
     {
+        ship = GameObject.Find("Ship").GetComponent<Ship>();
+        camera = GameObject.Find("Camera").GetComponent<OVRPlayerController>();
 
         world = (Hexsphere)GameObject.Find("Hexsphere").GetComponent<Hexsphere>();
 
@@ -130,6 +136,9 @@ public class Scenario : ScriptableObject
             biome.Apply();
         }
 
+        vehicle = new SlowCargoShip(ship, camera);
+        player.Vehicles.Add(vehicle);
+
     }
 
     public void Update()
@@ -154,6 +163,10 @@ public class Scenario : ScriptableObject
             {
                 biome.Apply();
             }
+        }
+
+        foreach (var vehicle in player.Vehicles) {
+            vehicle.Apply();
         }
 
     }
@@ -217,12 +230,13 @@ public class Scenario : ScriptableObject
                         healthy.Add(biome);
                     }
                 }
-                var biomeIndex = UnityEngine.Random.Range(0, healthy.Count - 1);
-                var incidentIndex = (int)(currentTime % potentialIncidents.Keys.Count);
 
-                Debug.Log($"Creating active incident {biomeIndex} :: {incidentIndex}.");
+                if (healthy.Count > 0) {
+                    var biomeIndex = UnityEngine.Random.Range(0, healthy.Count - 1);
+                    var incidentIndex = (int)(currentTime % potentialIncidents.Keys.Count);
 
-                {
+                    Debug.Log($"Creating active incident {biomeIndex} :: {incidentIndex}.");
+
                     var biome = healthy[biomeIndex];
                     var incident = potentialIncidents.Keys.ElementAt(incidentIndex);
                     var activeIncident = biome.Activate(incident, currentTime);
@@ -287,6 +301,8 @@ public abstract class Biome
     public abstract void Apply();
 
     public abstract Biome Clone(Tile tile);
+
+    public Vector3 Location => tile.center;
 
 }
 
@@ -448,36 +464,74 @@ public abstract class Vehicle
 
     protected float beginTime;
 
+    protected Ship ship;
+
+    protected OVRPlayerController home;
+
     public abstract int Capacity { get; }
+
+    public Vehicle(Ship ship, OVRPlayerController home)
+    {
+        this.ship = ship;
+        this.home = home;
+        currentLocation = ship.transform.position;
+
+        if (currentLocation != HomeLocation) {
+            ReturnHome();
+        }
+    }
+
+    private void ReturnHome() {
+        beginTime = Time.time;
+        beginLocation = currentLocation;
+        endLocation = HomeLocation;
+    }
 
     public void Service(Biome biome)
     {
-
-        // update begin and end
-
+        beginTime = Time.time;
+        beginLocation = currentLocation;
+        endLocation = biome.Location;
     }
+
+    private Vector3 HomeLocation => new Vector3(
+        home.transform.position.x - 1.25f,
+        home.transform.position.y + 0.3f,
+        home.transform.position.z + 1.25f);
 
     public void Update(float currentTime)
     {
-
-        // if the current location does not equal the end location
-        //      do the lerp
-
+        if (endLocation != null) {
+            if (currentLocation != endLocation) {
+                var next = Vector3.Lerp(beginLocation, endLocation, Mathf.Min((currentTime - beginTime) / Speed, 1));
+                currentLocation = next;
+            } else {
+                if (currentLocation != HomeLocation) {
+                    ReturnHome();
+                }
+            }
+        }
     }
 
-    public void Apply(GameObject vehicle)
+    public void Apply()
     {
-
-        // update the current location to the vehicle
-
+        ship.transform.position = currentLocation;
     }
+
+    protected abstract float Speed { get; }
 
 }
 
-public sealed class Ship : Vehicle
+public sealed class SlowCargoShip : Vehicle
 {
+    public SlowCargoShip(Ship ship, OVRPlayerController home)
+        : base(ship, home)
+    {
+    }
 
     public override int Capacity => 500;
+
+    protected override float Speed => 4f;
 }
 
 public abstract class Incident

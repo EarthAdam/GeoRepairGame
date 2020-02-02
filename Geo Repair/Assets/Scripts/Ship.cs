@@ -1,8 +1,8 @@
-﻿    using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Shipz : MonoBehaviour
+public class Ship : MonoBehaviour
 {
     bool shipSelected = false;
     bool tileSelected = false;
@@ -48,31 +48,24 @@ public class Shipz : MonoBehaviour
             ShipGo();
         }
     }
-
     void ShipGo()
     {
-        const float speed = 0.01f;
-
         print("Ship going");
+        gameObject.AddComponent<TrailRenderer>();
+        gameObject.GetComponent<TrailRenderer>().material = (Material)Resources.Load("jet_trail", typeof(Material)); ;
+        gameObject.GetComponent<TrailRenderer>().startWidth = 0.02f;
+        gameObject.GetComponent<TrailRenderer>().startColor = Color.white;
+        gameObject.GetComponent<TrailRenderer>().endWidth = 0.02f;
+        gameObject.GetComponent<TrailRenderer>().endColor = Color.white;
+        gameObject.GetComponent<TrailRenderer>().time = 2;
 
         Vector3 start = transform.position;
-
-        var next = new Vector3(
+        transform.position = new Vector3(
             Mathf.Lerp(start.x, destinationTile.x, t),
             Mathf.Lerp(start.y, destinationTile.y, t),
-            Mathf.Lerp(start.z, destinationTile.z, t));
-
-        transform.position = next;
+            Mathf.Lerp(start.z, destinationTile.z, t)
+            );
         t += 0.01f * Time.deltaTime;
-
-        if (next == destinationTile) {
-            gameObject.GetComponent<Renderer>().material.DisableKeyword("_EMISSION");
-            shipSelected = false;
-            tileSelected = false;
-
-            // TODO: Trigger pick up or delivery of cargo
-
-            // TODO: After dealing with cargo, begin journey back "home"
-        }
+        gameObject.GetComponent<Renderer>().material.DisableKeyword("_EMISSION");
     }
 }
