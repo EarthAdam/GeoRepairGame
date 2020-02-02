@@ -66,6 +66,6 @@ public class Shipz : MonoBehaviour
             Mathf.Lerp(start.z, destinationTile.z, t)
             );
         t += 0.01f * Time.deltaTime;
-
+        gameObject.GetComponent<Renderer>().material.DisableKeyword("_EMISSION");
     }
 }
