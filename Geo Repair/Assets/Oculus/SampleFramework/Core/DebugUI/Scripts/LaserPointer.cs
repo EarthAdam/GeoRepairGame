@@ -26,7 +26,7 @@ public class LaserPointer : OVRCursor
 
     public GameObject cursorVisual;
     public float maxLength = 10.0f;
-
+    public OVRInput.Button triggerButton;
     private LaserBeamBehavior _laserBeamBehavior;
 
     public LaserBeamBehavior laserBeamBehavior
@@ -77,29 +77,46 @@ public class LaserPointer : OVRCursor
         _hitTarget = false;
     }
     GameObject lastTile;
+    GameObject lastShip;
     private void Update()
     {
         Ray ray = new Ray(_startPoint, ((_startPoint + maxLength * _forward) - _startPoint));
-        //print("Start:" + _startPoint);
-        //print("End:" + _startPoint + maxLength * _forward);
         RaycastHit raycastHitInfo;
         if (Physics.Raycast(ray, out raycastHitInfo))
         {
             GameObject objectHitByRaycast = raycastHitInfo.collider.gameObject;
-            print(objectHitByRaycast.name);
 
-            
             if (objectHitByRaycast.name == "Tile")
             {
                 objectHitByRaycast.GetComponent<Tile>().Collided();
                 lastTile = objectHitByRaycast;
+                if (OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger))
+                {
+                    objectHitByRaycast.GetComponent<Tile>().ColliderClicked();
+                }
+            }
+            else if (objectHitByRaycast.name == "Ship")
+            {
+                objectHitByRaycast.GetComponent<Ship>().Collided();
+                lastShip = objectHitByRaycast;
+                if (OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger))
+                {
+                    objectHitByRaycast.GetComponent<Ship>().ColliderClicked();
+                }
             }
             else
-                if (lastTile != null)
             {
-                lastTile.GetComponent<Tile>().Uncollided();
+
+                if (lastTile != null)
+                {
+                    lastTile.GetComponent<Tile>().Uncollided();
+                }
+                if (lastShip != null)
+                {
+                    lastShip.GetComponent<Ship>().Uncollided();
+                }
+
             }
-            
         }
     }
 

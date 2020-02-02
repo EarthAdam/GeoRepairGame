@@ -125,14 +125,18 @@ public class Tile : MonoBehaviour {
 	}
     */
 
-    void OnMouseDown()
+    public void ColliderClicked()
     {
-		//Demo function
-		//pathfindingDrawDemo ();
-        if(OnTileClickedAction != null)
+        print("Clicked correctlyASsoo");
+        //Demo function
+        //pathfindingDrawDemo ();
+        /*
+        if (OnTileClickedAction != null)
         {
             OnTileClickedAction.Invoke(this);
+            print("Clicked correctly here too");
         }
+        */
 	}
 
 	/// <summary>
