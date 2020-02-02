@@ -45,7 +45,7 @@ public class Scenario : ScriptableObject {
     public readonly Dictionary<Biome, int> availableBiomes = new Dictionary<Biome, int>();
 
     public readonly Dictionary<Incident, int> potentialIncidents = new Dictionary<Incident, int> {
-        { new ForestFire(), 1 }
+        { new ForestFire(), 15 }
     };
 
     public readonly List<Biome> biomes = new List<Biome>();
@@ -64,18 +64,34 @@ public class Scenario : ScriptableObject {
         fire = (Material)Resources.Load("Materials/Fire", typeof(Material));
         dead = (Material)Resources.Load("Materials/Dead", typeof(Material));
 
-        // TODO: This should be based on the intensity of the scenario.
-        // randomly place x number of each biome listed in availableBiomes
+        availableBiomes.Add(new Forest(null, forest, fire, dead), 48);
+        availableBiomes.Add(new Plain(null, grass, fire, dead), 25);
+
+        var spaces = new Biome[world.TileCount];
+        
+        var sea = new Sea(null, water);
         for (var index = 0; index < world.TileCount; ++index) {
-            Biome biome;
-            if ((index % 3) == 0) {
-                biome = new Sea(world.tiles[index], water);
-            } else if ((index % 3) == 1) {
-                biome = new Forest(world.tiles[index], forest, fire, dead);
-            } else {
-                biome = new Plain(world.tiles[index], grass, fire, dead);
+            spaces[index] = sea;
+        }
+
+        var position = 0;
+        foreach (var availableBiome in availableBiomes) {
+            for (var index = 0; index < availableBiome.Value; ++index) {
+                spaces[position++] = availableBiome.Key;
             }
-            biomes.Add(biome);
+        }
+
+        for (var index = 0; index < world.TileCount; ++index) {
+            var swap = (int)UnityEngine.Random.Range(0, world.TileCount - 2);
+            if (index != swap) {
+                var biome = spaces[index];
+                spaces[index] = spaces[swap];
+                spaces[swap] = biome;
+            }
+        }
+
+        for (var index = 0; index < world.TileCount; ++index) {
+            biomes.Add(spaces[index].Clone(world.tiles[index]));
         }
 
         foreach (var biome in biomes) {
@@ -107,8 +123,6 @@ public class Scenario : ScriptableObject {
 
     }
 
-    private int last = 0;
-
     public void FixedUpdate() {
 
         var currentTime = Time.time;
@@ -131,26 +145,44 @@ public class Scenario : ScriptableObject {
 
         //      if vehicle location equals destination location, execute action
 
+        var exhausted = new List<ActiveIncident>();
         foreach (var activeIncident in activeIncidents) {
-            activeIncident.Update(currentTime);
+            if (activeIncident.Update(currentTime) == false) {
+                exhausted.Add(activeIncident);
+            };
+        }
+        foreach (var remove in exhausted) {
+            activeIncidents.Remove(remove);
         }
 
-        // TODO: calculate whether or not an incident begins
+        // TODO: (maximum number of concurrent incidents - number of active instances) * result of the Lerp function for the scenario <- (time / 120 = year)
+        var maximumIncidents = 0;
+        foreach (var potentialIncident in potentialIncidents) {
+            maximumIncidents += potentialIncident.Value;
+        }
 
-        if (currentTime < biomes.Count) {
+        var currentIncidents = activeIncidents.Count;
 
-            var biomeIndex = (int)(currentTime % biomes.Count);
-            var incidentIndex = (int)(currentTime % potentialIncidents.Keys.Count);
+        if (currentIncidents < maximumIncidents) {
+            var likelihood = 10;
+            if (UnityEngine.Random.Range(1, 210) < likelihood) {
+                var healthy = new List<Biome>();
+                foreach (var biome in biomes) {
+                    if (biome.ActiveIncident == null) {
+                        healthy.Add(biome);
+                    }
+                }
+                var biomeIndex = UnityEngine.Random.Range(0, healthy.Count - 1);
+                var incidentIndex = (int)(currentTime % potentialIncidents.Keys.Count);
 
-            if (biomeIndex > last) {
                 Debug.Log($"Creating active incident {biomeIndex} :: {incidentIndex}.");
 
-                var biome = biomes[biomeIndex];
-                var incident = potentialIncidents.Keys.ElementAt(incidentIndex);
-                var activeIncident = new ActiveIncident(biome, incident);
-                activeIncidents.Add(activeIncident);
-
-                last = biomeIndex;
+                {
+                    var biome = healthy[biomeIndex];
+                    var incident = potentialIncidents.Keys.ElementAt(incidentIndex);
+                    var activeIncident = biome.Activate(incident, currentTime);
+                    activeIncidents.Add(activeIncident);
+                }
             }
         }
         
@@ -183,7 +215,9 @@ public abstract class Biome {
 
     public abstract Dictionary<string, int> ResourcesNeeded { get; }
 
-    public ActiveIncident activeIncident;
+    private ActiveIncident activeIncident;
+
+    public ActiveIncident ActiveIncident => activeIncident;
 
     public void Update(int damage) {
 
@@ -192,9 +226,18 @@ public abstract class Biome {
             changed = true;
         }
 
+        Debug.Log($"Setting damage to {damage}");
+
+    }
+
+    public ActiveIncident Activate(Incident incident, float currentTime) {
+        activeIncident = new ActiveIncident(this, incident, currentTime);
+        return activeIncident;
     }
 
     public abstract void Apply();
+
+    public abstract Biome Clone(Tile tile);
 
 }
 
@@ -222,6 +265,10 @@ public sealed class Sea : Biome {
 
         tile.SetMaterial(water);
 
+    }
+
+    public override Biome Clone(Tile tile) {
+        return new Sea(tile, water);
     }
 
 }
@@ -266,6 +313,10 @@ public sealed class Forest : Biome {
 
     }
 
+    public override Biome Clone(Tile tile) {
+        return new Forest(tile, forest, fire, dead);
+    }
+
 }
 
 public sealed class Plain : Biome {
@@ -306,6 +357,10 @@ public sealed class Plain : Biome {
             tile.SetMaterial(dead);
         }
 
+    }
+
+    public override Biome Clone(Tile tile) {
+        return new Plain(tile, grass, fire, dead);
     }
 
 }
@@ -390,15 +445,26 @@ public sealed class ActiveIncident {
 
     public int intensity;
 
-    public ActiveIncident(Biome biome, Incident incident)
+    public float startTime;
+
+    public ActiveIncident(Biome biome, Incident incident, float currentTime)
     {
         this.biome = biome;
         this.incident = incident;
+        this.startTime = currentTime;
     }
 
     // TODO: Fix this (should cause damage based on some time scale?)
-    public void Update(float currentTime) {
-        this.biome.Update((int)(currentTime));
+    public bool Update(float currentTime) {
+        var damage = (int)(currentTime - startTime) * 4;
+
+        this.biome.Update(damage);
+
+        if (damage >= 100) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
 }
