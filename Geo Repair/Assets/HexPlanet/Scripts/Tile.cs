@@ -127,6 +127,8 @@ public class Tile : MonoBehaviour {
 
     public void ColliderClicked()
     {
+        GameObject.Find("Shipz").GetComponent<Shipz>().TileClicked();
+        GameObject.Find("Shipz").GetComponent<Shipz>().destinationTile = transform.position;
         print("Clicked correctlyASsoo");
         //Demo function
         //pathfindingDrawDemo ();

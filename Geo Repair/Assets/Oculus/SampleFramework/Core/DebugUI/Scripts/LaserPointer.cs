@@ -101,6 +101,7 @@ public class LaserPointer : OVRCursor
                 lastShipz = objectHitByRaycast;
                 if (OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger))
                 {
+                    print("GGGGGGGGGGG");
                     objectHitByRaycast.GetComponent<Shipz>().ColliderClicked();
                 }
             }
